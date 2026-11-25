@@ -1,0 +1,16 @@
+step,count,explanation
+Records in Failures table,4117,"all RESTYPE values, including missing CERT"
+  FAILURE records with valid CERT and FAILDATE,3039,eligible for bank-level failure linkage
+  ASSISTANCE records,593,not failures under the primary definition
+Distinct CERT with a FAILURE record,3036,earliest FAILDATE used per CERT
+  CERT with multiple FAILURE records,3,multiple event records retained
+FAILURE CERT with any raw Financials row,2841,before ASSET validity and failure-date filters
+FAILURE CERT without raw Financials row,195,no matching raw Call Report CERT
+FAILURE CERT with at least one clean-panel row,2813,after panel cleaning and point-in-time filters
+FAILURE CERT without clean-panel row,223,raw row may be invalid or all rows removed by event timing
+  No-panel first failure before first raw-panel quarter,189,failure predates available raw Financials history
+Clean-panel banks with EXIT_TYPE=failure,2813,bank-level diagnostic classification
+Banks with y=1 in development,2264,at least one positive prediction row
+Banks with y=1 in test,469,at least one positive prediction row
+Banks with y=1 anywhere in modelling features,2811,within configured modelling horizon
+Clean-panel FAILURE CERT never labelled y=1,2,e.g. event outside 12-month horizon or outside modelling period

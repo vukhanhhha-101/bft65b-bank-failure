@@ -1,0 +1,7 @@
+definition,period,rows_at_risk,positive_rows,positive_rate,positive_banks
+FAILURE only (primary definition),development,1183030,8923,0.007542496809041191,2264
+FAILURE only (primary definition),test,179969,1650,0.009168245642305064,469
+FAILURE + ASSISTANCE,development,1179112,10300,0.008735387308415147,2620
+FAILURE + ASSISTANCE,test,179584,1646,0.009165627227369922,468
+ASSISTANCE only (before any FAILURE),development,1179112,1517,0.0012865614123170658,391
+ASSISTANCE only (before any FAILURE),test,179584,0,0.0,0

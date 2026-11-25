@@ -1,0 +1,33 @@
+{
+ "dev_rows": 1183030,
+ "dev_failed_banks": 2264,
+ "thresholds": {
+  "rule_texas_ratio": {
+   "threshold": 0.38434163701067614,
+   "alarm_rate": 0.07095754221496993,
+   "cv_cost_k": 15798638.29013214
+  },
+  "baseline_logit_4": {
+   "threshold": 0.006938610924998936,
+   "alarm_rate": 0.11502227872809791,
+   "cv_cost_k": 10355092.477520779
+  },
+  "logit_all": {
+   "threshold": 0.003977618095388853,
+   "alarm_rate": 0.09671839238683103,
+   "cv_cost_k": 11321246.962188136
+  },
+  "hgb_all": {
+   "threshold": 0.0010059946642455141,
+   "alarm_rate": 0.11019787953299154,
+   "cv_cost_k": 7387919.485985293
+  }
+ },
+ "cost": {
+  "mean_cost_k": 54251.82012692391,
+  "rows_per_failure": 3.9412544169611308,
+  "c_miss_row": 13765.114957677431,
+  "c_fa_row": 50.0,
+  "n_cost_obs": 2393
+ }
+}

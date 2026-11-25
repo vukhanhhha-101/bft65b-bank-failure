@@ -1,0 +1,8 @@
+SELECT [when([(col("qidx").shift([dyn int: 4]).over([col("CERT")])) == ([(col("qidx")) - (4)])]).then([([(col("ASSET")) / (col("ASSET").shift([dyn int: 4]).over([col("CERT")]))]) - (1.0)]).otherwise(null.cast(Float64)).mean().alias("g"), col("ROA").rolling_mean().over([col("CERT")]).mean().alias("r")]
+   WITH_COLUMNS:
+   [[([(col("REPDTE").dt.year()) * (4)]) + ([([(col("REPDTE").dt.month()) - (1)]) floor_div (3)].cast(Int32))].alias("qidx")] 
+    SORT BY [col("CERT"), col("REPDTE")]
+      SELECT [col("CERT"), col("REPDTE"), col("ASSET"), col("ROA"), col("NCLNLS")]
+        Parquet SCAN [/content/drive/MyDrive/bft65b-bank-failure/bft65b-bank-failure/data_proc/panel/year=1984/part.parquet, ... 42 other sources]
+        PROJECT */33 COLUMNS
+        ESTIMATED ROWS: 3085680

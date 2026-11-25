@@ -1,0 +1,54 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Raw and processed datasets
+data_raw/
+data_proc/
+*.parquet
+
+# Model artifacts
+*.joblib
+*.pkl
+
+# Backup and temporary files
+*.bak
+*.tmp
+*.log
+.ipynb_checkpoints/
+README_before_update_*.md
+
+# Temporary patch packages
+part2_patch*.zip
+patched_src.zip
+
+# Operating system
+.DS_Store
+Thumbs.db
+
+# Local secrets
+.env
+
+
+# Duplicate and temporary source copies
+/03_quality*.py
+src/07_features (1).py
+
+# README backups
+README_before_*.md
+README_before_*.bak
+
+# Temporary archives
+*.zip
+
+# Old evaluation archive - do not publish
+reports/archive_pre_lag_fix/
+
+# Local notebook backups
+BFT65B_pipeline_backup_*.ipynb
