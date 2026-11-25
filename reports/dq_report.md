@@ -79,30 +79,27 @@
 | LNATRES | -8.598e+04 | 0 | 0 | 603 | 1e+05 | 1.643e+06 | 3.207e+07 |
 | ASSET | 1 | 1596 | 5408 | 8.611e+04 | 1.049e+07 | 1.531e+08 | 4.091e+09 |
 
-## 7. Failure and reporting status
-A bank is classified as failure only if it has at least one valid-CERT record with RESTYPE = FAILURE. ASSISTANCE-only records are not failures.
-For non-failure banks, reporting status indicates whether a Financials record exists in the latest quarter in this dataset. It is NOT evidence of legal closure, insolvency, or active regulatory status.
-| reporting_status | len |
+## 7. Exits (failure vs other)
+| exit_type | len |
 |---|---|
-| failure | 2841 |
-| reporting_in_latest_quarter | 4313 |
-| not_reporting_in_latest_quarter | 16910 |
+| failure | 3241 |
+| active | 4306 |
+| other_exit | 16517 |
 
-Non-failure banks not reporting in the latest quarter, by CHANGEC1 (codes require interpretation using the FDIC field dictionary):
+Other exits by CHANGEC1 (map codes with the FDIC dictionary; mergers are NOT failures):
 | CHANGEC1 | len |
 |---|---|
-| 223.0 | 14181 |
-| 221.0 | 807 |
-| 240.0 | 504 |
-| 217.0 | 488 |
-| 213.0 | 242 |
+| 223.0 | 14063 |
+| 221.0 | 805 |
+| 240.0 | 501 |
+| 217.0 | 458 |
 |  | 194 |
-| 224.0 | 184 |
+| 224.0 | 183 |
 | 222.0 | 173 |
 | 235.0 | 84 |
 | 216.0 | 23 |
-| 211.0 | 17 |
-| 230.0 | 11 |
+| 213.0 | 21 |
+| 230.0 | 10 |
 | 470.0 | 1 |
 | 225.0 | 1 |
 
@@ -112,28 +109,6 @@ Failures table by RESTYPE:
 | FAILURE | 3524 |
 | ASSISTANCE | 593 |
 
-- distinct valid-CERT failure banks: 3,036
-- distinct failure banks with no Financials rows: 195
-- failure banks whose last observed report is on/after FAILDATE (diagnostic only): 270
-- failure banks with a Financials report strictly before FAILDATE: 2,839
-- pre-failure gap in days (latest REPDTE < FAILDATE): median 57, p10 18, p90 94
-
-## 8. Failures-table data quality
-- total raw records: 4,117
-- FAILURE records: 3,524
-- ASSISTANCE records: 593
-- records with missing CERT: 488
-- missing CERT by RESTYPE:
-| RESTYPE | len |
-|---|---|
-| FAILURE | 485 |
-| ASSISTANCE | 3 |
-- distinct valid CERT: 3,585
-- CERT groups with multiple records: 44
-- extra rows beyond one record per CERT: 44
-- repeated CERT groups with multiple FAILDATE values: 44
-- repeated CERT groups with multiple RESTYPE values: 37
-- duplicate event-key rows (CERT, FAILDATE, RESTYPE): 0
-- exact duplicate rows: 0
-Repeated CERTs are retained: multiple dates or event types represent distinct event records, not automatically duplicate data.
-Missing-CERT records are retained in the raw table but cannot be linked to a bank-level Financials panel.
+- failure records with no Financials rows: 834
+- failures whose last report is dated on/after FAILDATE (impossible for point-in-time): 478
+- days between last report and FAILDATE: median 47, p10 -163, p90 92

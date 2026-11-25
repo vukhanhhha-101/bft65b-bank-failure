@@ -90,12 +90,12 @@ def boot_ci(df, p, n=200):
 
 
 def stage_dev():
-    df = load(); dev = df[df.pq <= DEV_END_Q].reset_index(drop=True)          # split on PREDICTION quarter
+    df = load(); dev = df[df.qidx <= DEV_END_Q].reset_index(drop=True)
     assert TEST_START_Q - DEV_END_Q - 1 >= 4, "gap between development and test must be >= 4 quarters"
     cp = cost_params(dev); print("cost parameters:", cp)
     oof = {m: np.full(len(dev), np.nan) for m in MODELS}; rows = []
     for fi, (a, b) in enumerate(FOLDS, 1):
-        va = (dev.pq >= a) & (dev.pq <= b); tr = dev.pq <= a - PURGE
+        va = (dev.qidx >= a) & (dev.qidx <= b); tr = dev.qidx <= a - PURGE
         for m, (cols, mk) in MODELS.items():
             mod = mk().fit(dev.loc[tr, cols].values, dev.y[tr].values)
             p = mod.predict_proba(dev.loc[va, cols].values)[:, 1]; oof[m][va.values] = p
@@ -107,6 +107,7 @@ def stage_dev():
     print(pd.DataFrame(pooled).T)
     thr = {}
     for m in MODELS:
+        if m == "rule_texas_ratio": continue
         t, ar, c = best_threshold(y, oof[m][mask], cp["c_miss_row"], cp["c_fa_row"]); thr[m] = dict(threshold=t, alarm_rate=ar, cv_cost_k=c)
     sens = []
     for cfa in (10, 25, 50, 100, 250, 500):
@@ -125,17 +126,16 @@ def stage_dev():
 def stage_test():
     if FLAG.exists():
         raise SystemExit("Test set already used once (reports/TEST_USED.flag). Re-running would be test-set reuse.")
-    df = load(); test = df[(df.pq >= TEST_START_Q) & (df.pq <= TEST_END_Q)].reset_index(drop=True)
+    df = load(); test = df[(df.qidx >= TEST_START_Q) & (df.qidx <= TEST_END_Q)].reset_index(drop=True)
     art = joblib.load(PROC / "dev_artifacts.joblib"); cp = art["cost"]; rows = []
-    print(f"TEST: {len(test):,} rows, {test.loc[test.y == 1, 'CERT'].nunique()} failed banks"); preds = {}
+    print(f"TEST: {len(test):,} rows, {test.loc[test.y == 1, 'CERT'].nunique()} failed banks")
     for m, (cols, _) in MODELS.items():
-        p = art["models"][m].predict_proba(test[cols].values)[:, 1]; preds[m] = p
+        p = art["models"][m].predict_proba(test[cols].values)[:, 1]
         t = art["thresholds"].get(m, {}).get("threshold")
         r = dict(model=m, **metrics(test.y.values, p, t, cp) if t is not None else metrics(test.y.values, p))
-        r["brier"] = np.nan if m == "rule_texas_ratio" else brier_score_loss(test.y.values, p)      # Texas ratio is a score, not a probability
+        r["brier"] = brier_score_loss(test.y.values, 1 / (1 + np.exp(-p))) if m == "rule_texas_ratio" else brier_score_loss(test.y.values, p)
         r["pr_auc_ci95"] = boot_ci(test, p); rows.append(r); print(r)
     pd.DataFrame(rows).to_csv(REPORTS / "test_results.csv", index=False)
-    pd.DataFrame({"CERT": test.CERT.values, "REPDTE": test.REPDTE.values, "pq": test.pq.values, "y": test.y.values, **preds}).to_parquet(PROC / "test_predictions.parquet", index=False)
     FLAG.write_text("test evaluated once"); print("TEST STAGE DONE")
 
 

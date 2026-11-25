@@ -1,36 +1,30 @@
 {
-  "rows_raw_panel": 1682738,
-  "rows_dropped_asset_le0_or_null": 0,
-  "rows_dropped_report_on_or_after_failure": 1211,
-  "rows_dropped_already_failed_at_prediction_date": 2528,
-  "rows_clean_panel": 1678999,
-  "rows_modelling_table": 1656978,
-  "banks_clean_panel": 24036,
-  "exit_types_bank_level": [
-    {
-      "EXIT_TYPE": "failure",
-      "len": 2813
-    },
-    {
-      "EXIT_TYPE": "not_reporting_in_latest_quarter",
-      "len": 16910
-    },
-    {
-      "EXIT_TYPE": "reporting_in_latest_quarter",
-      "len": 4313
-    }
-  ],
-  "dev_rows": 1183030,
-  "dev_failed_banks": 2264,
-  "test_rows": 179969,
-  "test_failed_banks": 469,
-  "positive_rate_dev": 0.007542496809041191,
-  "positive_rate_test": 0.009168245642305064,
-  "old_report_date_positive_rows_before_cutoff": 10891,
-  "old_positive_rows_removed_by_publication_lag": 2526,
-  "pub_lag_months": 3,
-  "minimum_observed_pub_lag_days": 90,
-  "failure_only": true,
-  "last_report_date": "2025-03-31",
-  "last_prediction_date": "2025-06-30"
+ "rows_raw_panel": 1682738,
+ "rows_dropped_asset_le0": 0,
+ "rows_dropped_report_after_failure": 1211,
+ "rows_clean_panel": 1681527,
+ "rows_modelling_table": 1663998,
+ "banks": 24062,
+ "exit_types": [
+  {
+   "EXIT_TYPE": "active",
+   "len": 4313
+  },
+  {
+   "EXIT_TYPE": "failure",
+   "len": 2839
+  },
+  {
+   "EXIT_TYPE": "other_exit",
+   "len": 16910
+  }
+ ],
+ "dev_rows": 1193798,
+ "dev_failed_banks": 2290,
+ "test_rows": 178642,
+ "test_failed_banks": 469,
+ "positive_rate_dev": 0.0072968793715519715,
+ "positive_rate_test": 0.009236349794561189,
+ "rows_fail_before_avail": 1107,
+ "failure_only": true
 }

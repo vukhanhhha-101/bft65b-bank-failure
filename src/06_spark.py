@@ -31,9 +31,8 @@ def spark_side(spark):
     g = sdf.withColumn("g", F.when(F.lag("qidx", 4).over(w) == F.col("qidx") - 4, F.col("ASSET") / F.lag("ASSET", 4).over(w) - 1))
     growth = g.groupBy(yr.alias("yr")).agg(F.avg("g").alias("g")).orderBy("yr")
     fd = spark.createDataFrame(failure_dates().select(["CERT", "FAILDATE"]).to_pandas())
-    pred = F.last_day(F.add_months(F.col("REPDTE"), 3))            # prediction date = end of the quarter after the report (publication lag)
     ylab = sdf.drop("y").join(fd.withColumnRenamed("FAILDATE", "FD"), on="CERT", how="left").select(
-        F.sum(((F.col("FD") > pred) & (F.col("FD") <= F.last_day(F.add_months(pred, 12)))).cast("int")).alias("y"))
+        F.sum(((F.col("FD") > F.col("REPDTE")) & (F.col("FD") <= F.add_months(F.col("REPDTE"), 12))).cast("int")).alias("y"))
     return by_year, growth, ylab
 
 

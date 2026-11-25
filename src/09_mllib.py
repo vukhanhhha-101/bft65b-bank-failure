@@ -15,10 +15,9 @@ def main():
     spark = SparkSession.builder.master("local[*]").appName("bft65b-mllib").config("spark.driver.memory", "4g").getOrCreate()
     sdf = spark.read.parquet(str(FEATURES)).withColumn("label", F.col("y").cast("double"))
     for c in FEATS: sdf = sdf.withColumn(c, F.col(c).cast("double"))
-    tr = sdf.filter(F.col("pq") <= qi(1999, 4)); va = sdf.filter(F.col("pq").between(qi(2001, 1), qi(2006, 4)))   # prediction quarters
-    valid_feats = [c for c in FEATS if tr.filter(F.col(c).isNotNull() & ~F.isnan(c)).limit(1).count() > 0]
-    imp = Imputer(strategy="median", inputCols=valid_feats, outputCols=[f + "_i" for f in valid_feats])
-    vec = VectorAssembler(inputCols=[f + "_i" for f in valid_feats], outputCol="raw")
+    tr = sdf.filter(F.col("qidx") <= qi(1999, 4)); va = sdf.filter(F.col("qidx").between(qi(2001, 1), qi(2006, 4)))
+    imp = Imputer(strategy="median", inputCols=FEATS, outputCols=[f + "_i" for f in FEATS])
+    vec = VectorAssembler(inputCols=[f + "_i" for f in FEATS], outputCol="raw")
     sc = StandardScaler(inputCol="raw", outputCol="features", withMean=True, withStd=True)
     ev_pr, ev_roc = BinaryClassificationEvaluator(metricName="areaUnderPR"), BinaryClassificationEvaluator(metricName="areaUnderROC")
     rows = []

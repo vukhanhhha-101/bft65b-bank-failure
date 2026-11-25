@@ -15,7 +15,7 @@ AdaptiveSparkPlan (28)
                                  +- Window (7)
                                     +- * Sort (6)
                                        +- AQEShuffleRead (5)
-                                          +- ShuffleQueryStage (4), Statistics(sizeInBytes=64.0 MiB, rowCount=1.68E+6)
+                                          +- ShuffleQueryStage (4), Statistics(sizeInBytes=64.1 MiB, rowCount=1.68E+6)
                                              +- Exchange (3)
                                                 +- * ColumnarToRow (2)
                                                    +- Scan parquet  (1)
@@ -33,128 +33,128 @@ AdaptiveSparkPlan (28)
 
 
 (1) Scan parquet 
-Output [4]: [CERT#203, REPDTE#204, ASSET#206, qidx#237]
+Output [4]: [CERT#200, REPDTE#201, ASSET#203, qidx#234]
 Batched: true
 Location: InMemoryFileIndex [file:/content/drive/MyDrive/bft65b-bank-failure/bft65b-bank-failure/data_proc/panel_clean.parquet]
 ReadSchema: struct<CERT:int,REPDTE:date,ASSET:double,qidx:int>
 
 (2) ColumnarToRow [codegen id : 1]
-Input [4]: [CERT#203, REPDTE#204, ASSET#206, qidx#237]
+Input [4]: [CERT#200, REPDTE#201, ASSET#203, qidx#234]
 
 (3) Exchange
-Input [4]: [CERT#203, REPDTE#204, ASSET#206, qidx#237]
-Arguments: hashpartitioning(CERT#203, 16), ENSURE_REQUIREMENTS, [plan_id=622]
+Input [4]: [CERT#200, REPDTE#201, ASSET#203, qidx#234]
+Arguments: hashpartitioning(CERT#200, 16), ENSURE_REQUIREMENTS, [plan_id=622]
 
 (4) ShuffleQueryStage
-Output [4]: [CERT#203, REPDTE#204, ASSET#206, qidx#237]
+Output [4]: [CERT#200, REPDTE#201, ASSET#203, qidx#234]
 Arguments: 0
 
 (5) AQEShuffleRead
-Input [4]: [CERT#203, REPDTE#204, ASSET#206, qidx#237]
+Input [4]: [CERT#200, REPDTE#201, ASSET#203, qidx#234]
 Arguments: coalesced
 
 (6) Sort [codegen id : 2]
-Input [4]: [CERT#203, REPDTE#204, ASSET#206, qidx#237]
-Arguments: [CERT#203 ASC NULLS FIRST, qidx#237 ASC NULLS FIRST], false, 0
+Input [4]: [CERT#200, REPDTE#201, ASSET#203, qidx#234]
+Arguments: [CERT#200 ASC NULLS FIRST, qidx#234 ASC NULLS FIRST], false, 0
 
 (7) Window
-Input [4]: [CERT#203, REPDTE#204, ASSET#206, qidx#237]
-Arguments: [lag(qidx#237, -4, null) windowspecdefinition(CERT#203, qidx#237 ASC NULLS FIRST, specifiedwindowframe(RowFrame, -4, -4)) AS _we0#306, lag(ASSET#206, -4, null) windowspecdefinition(CERT#203, qidx#237 ASC NULLS FIRST, specifiedwindowframe(RowFrame, -4, -4)) AS _we1#307], [CERT#203], [qidx#237 ASC NULLS FIRST]
+Input [4]: [CERT#200, REPDTE#201, ASSET#203, qidx#234]
+Arguments: [lag(qidx#234, -4, null) windowspecdefinition(CERT#200, qidx#234 ASC NULLS FIRST, specifiedwindowframe(RowFrame, -4, -4)) AS _we0#301, lag(ASSET#203, -4, null) windowspecdefinition(CERT#200, qidx#234 ASC NULLS FIRST, specifiedwindowframe(RowFrame, -4, -4)) AS _we1#302], [CERT#200], [qidx#234 ASC NULLS FIRST]
 
 (8) Project [codegen id : 3]
-Output [2]: [CASE WHEN (_we0#306 = (qidx#237 - 4)) THEN ((ASSET#206 / _we1#307) - 1.0) END AS g#305, year(REPDTE#204) AS _groupingexpression#385]
-Input [6]: [CERT#203, REPDTE#204, ASSET#206, qidx#237, _we0#306, _we1#307]
+Output [2]: [CASE WHEN (_we0#301 = (qidx#234 - 4)) THEN ((ASSET#203 / _we1#302) - 1.0) END AS g#300, year(REPDTE#201) AS _groupingexpression#379]
+Input [6]: [CERT#200, REPDTE#201, ASSET#203, qidx#234, _we0#301, _we1#302]
 
 (9) HashAggregate [codegen id : 3]
-Input [2]: [g#305, _groupingexpression#385]
-Keys [1]: [_groupingexpression#385]
-Functions [1]: [partial_avg(g#305)]
-Aggregate Attributes [2]: [sum#386, count#387L]
-Results [3]: [_groupingexpression#385, sum#388, count#389L]
+Input [2]: [g#300, _groupingexpression#379]
+Keys [1]: [_groupingexpression#379]
+Functions [1]: [partial_avg(g#300)]
+Aggregate Attributes [2]: [sum#380, count#381L]
+Results [3]: [_groupingexpression#379, sum#382, count#383L]
 
 (10) Exchange
-Input [3]: [_groupingexpression#385, sum#388, count#389L]
-Arguments: hashpartitioning(_groupingexpression#385, 16), ENSURE_REQUIREMENTS, [plan_id=690]
+Input [3]: [_groupingexpression#379, sum#382, count#383L]
+Arguments: hashpartitioning(_groupingexpression#379, 16), ENSURE_REQUIREMENTS, [plan_id=690]
 
 (11) ShuffleQueryStage
-Output [3]: [_groupingexpression#385, sum#388, count#389L]
+Output [3]: [_groupingexpression#379, sum#382, count#383L]
 Arguments: 1
 
 (12) AQEShuffleRead
-Input [3]: [_groupingexpression#385, sum#388, count#389L]
+Input [3]: [_groupingexpression#379, sum#382, count#383L]
 Arguments: coalesced
 
 (13) HashAggregate [codegen id : 4]
-Input [3]: [_groupingexpression#385, sum#388, count#389L]
-Keys [1]: [_groupingexpression#385]
-Functions [1]: [avg(g#305)]
-Aggregate Attributes [1]: [avg(g#305)#358]
-Results [2]: [_groupingexpression#385 AS yr#308, avg(g#305)#358 AS g#309]
+Input [3]: [_groupingexpression#379, sum#382, count#383L]
+Keys [1]: [_groupingexpression#379]
+Functions [1]: [avg(g#300)]
+Aggregate Attributes [1]: [avg(g#300)#352]
+Results [2]: [_groupingexpression#379 AS yr#303, avg(g#300)#352 AS g#304]
 
 (14) Exchange
-Input [2]: [yr#308, g#309]
-Arguments: rangepartitioning(yr#308 ASC NULLS FIRST, 16), ENSURE_REQUIREMENTS, [plan_id=726]
+Input [2]: [yr#303, g#304]
+Arguments: rangepartitioning(yr#303 ASC NULLS FIRST, 16), ENSURE_REQUIREMENTS, [plan_id=726]
 
 (15) ShuffleQueryStage
-Output [2]: [yr#308, g#309]
+Output [2]: [yr#303, g#304]
 Arguments: 2
 
 (16) AQEShuffleRead
-Input [2]: [yr#308, g#309]
+Input [2]: [yr#303, g#304]
 Arguments: coalesced
 
 (17) Sort [codegen id : 5]
-Input [2]: [yr#308, g#309]
-Arguments: [yr#308 ASC NULLS FIRST], true, 0
+Input [2]: [yr#303, g#304]
+Arguments: [yr#303 ASC NULLS FIRST], true, 0
 
 (18) ResultQueryStage
-Output [2]: [yr#308, g#309]
+Output [2]: [yr#303, g#304]
 Arguments: 3
 
 (19) Exchange
-Input [4]: [CERT#203, REPDTE#204, ASSET#206, qidx#237]
-Arguments: hashpartitioning(CERT#203, 16), ENSURE_REQUIREMENTS, [plan_id=589]
+Input [4]: [CERT#200, REPDTE#201, ASSET#203, qidx#234]
+Arguments: hashpartitioning(CERT#200, 16), ENSURE_REQUIREMENTS, [plan_id=589]
 
 (20) Sort
-Input [4]: [CERT#203, REPDTE#204, ASSET#206, qidx#237]
-Arguments: [CERT#203 ASC NULLS FIRST, qidx#237 ASC NULLS FIRST], false, 0
+Input [4]: [CERT#200, REPDTE#201, ASSET#203, qidx#234]
+Arguments: [CERT#200 ASC NULLS FIRST, qidx#234 ASC NULLS FIRST], false, 0
 
 (21) Window
-Input [4]: [CERT#203, REPDTE#204, ASSET#206, qidx#237]
-Arguments: [lag(qidx#237, -4, null) windowspecdefinition(CERT#203, qidx#237 ASC NULLS FIRST, specifiedwindowframe(RowFrame, -4, -4)) AS _we0#306, lag(ASSET#206, -4, null) windowspecdefinition(CERT#203, qidx#237 ASC NULLS FIRST, specifiedwindowframe(RowFrame, -4, -4)) AS _we1#307], [CERT#203], [qidx#237 ASC NULLS FIRST]
+Input [4]: [CERT#200, REPDTE#201, ASSET#203, qidx#234]
+Arguments: [lag(qidx#234, -4, null) windowspecdefinition(CERT#200, qidx#234 ASC NULLS FIRST, specifiedwindowframe(RowFrame, -4, -4)) AS _we0#301, lag(ASSET#203, -4, null) windowspecdefinition(CERT#200, qidx#234 ASC NULLS FIRST, specifiedwindowframe(RowFrame, -4, -4)) AS _we1#302], [CERT#200], [qidx#234 ASC NULLS FIRST]
 
 (22) Project
-Output [2]: [CASE WHEN (_we0#306 = (qidx#237 - 4)) THEN ((ASSET#206 / _we1#307) - 1.0) END AS g#305, year(REPDTE#204) AS _groupingexpression#385]
-Input [6]: [CERT#203, REPDTE#204, ASSET#206, qidx#237, _we0#306, _we1#307]
+Output [2]: [CASE WHEN (_we0#301 = (qidx#234 - 4)) THEN ((ASSET#203 / _we1#302) - 1.0) END AS g#300, year(REPDTE#201) AS _groupingexpression#379]
+Input [6]: [CERT#200, REPDTE#201, ASSET#203, qidx#234, _we0#301, _we1#302]
 
 (23) HashAggregate
-Input [2]: [g#305, _groupingexpression#385]
-Keys [1]: [_groupingexpression#385]
-Functions [1]: [partial_avg(g#305)]
-Aggregate Attributes [2]: [sum#386, count#387L]
-Results [3]: [_groupingexpression#385, sum#388, count#389L]
+Input [2]: [g#300, _groupingexpression#379]
+Keys [1]: [_groupingexpression#379]
+Functions [1]: [partial_avg(g#300)]
+Aggregate Attributes [2]: [sum#380, count#381L]
+Results [3]: [_groupingexpression#379, sum#382, count#383L]
 
 (24) Exchange
-Input [3]: [_groupingexpression#385, sum#388, count#389L]
-Arguments: hashpartitioning(_groupingexpression#385, 16), ENSURE_REQUIREMENTS, [plan_id=595]
+Input [3]: [_groupingexpression#379, sum#382, count#383L]
+Arguments: hashpartitioning(_groupingexpression#379, 16), ENSURE_REQUIREMENTS, [plan_id=595]
 
 (25) HashAggregate
-Input [3]: [_groupingexpression#385, sum#388, count#389L]
-Keys [1]: [_groupingexpression#385]
-Functions [1]: [avg(g#305)]
-Aggregate Attributes [1]: [avg(g#305)#358]
-Results [2]: [_groupingexpression#385 AS yr#308, avg(g#305)#358 AS g#309]
+Input [3]: [_groupingexpression#379, sum#382, count#383L]
+Keys [1]: [_groupingexpression#379]
+Functions [1]: [avg(g#300)]
+Aggregate Attributes [1]: [avg(g#300)#352]
+Results [2]: [_groupingexpression#379 AS yr#303, avg(g#300)#352 AS g#304]
 
 (26) Exchange
-Input [2]: [yr#308, g#309]
-Arguments: rangepartitioning(yr#308 ASC NULLS FIRST, 16), ENSURE_REQUIREMENTS, [plan_id=598]
+Input [2]: [yr#303, g#304]
+Arguments: rangepartitioning(yr#303 ASC NULLS FIRST, 16), ENSURE_REQUIREMENTS, [plan_id=598]
 
 (27) Sort
-Input [2]: [yr#308, g#309]
-Arguments: [yr#308 ASC NULLS FIRST], true, 0
+Input [2]: [yr#303, g#304]
+Arguments: [yr#303 ASC NULLS FIRST], true, 0
 
 (28) AdaptiveSparkPlan
-Output [2]: [yr#308, g#309]
+Output [2]: [yr#303, g#304]
 Arguments: isFinalPlan=true
 
 

@@ -25,96 +25,96 @@ AdaptiveSparkPlan (20)
 
 
 (1) Scan parquet 
-Output [3]: [REPDTE#204, ASSET#206, ROA#231]
+Output [3]: [REPDTE#201, ASSET#203, ROA#228]
 Batched: true
 Location: InMemoryFileIndex [file:/content/drive/MyDrive/bft65b-bank-failure/bft65b-bank-failure/data_proc/panel_clean.parquet]
 ReadSchema: struct<REPDTE:date,ASSET:double,ROA:double>
 
 (2) ColumnarToRow [codegen id : 1]
-Input [3]: [REPDTE#204, ASSET#206, ROA#231]
+Input [3]: [REPDTE#201, ASSET#203, ROA#228]
 
 (3) Project [codegen id : 1]
-Output [3]: [ASSET#206, ROA#231, year(REPDTE#204) AS _groupingexpression#364]
-Input [3]: [REPDTE#204, ASSET#206, ROA#231]
+Output [3]: [ASSET#203, ROA#228, year(REPDTE#201) AS _groupingexpression#358]
+Input [3]: [REPDTE#201, ASSET#203, ROA#228]
 
 (4) HashAggregate [codegen id : 1]
-Input [3]: [ASSET#206, ROA#231, _groupingexpression#364]
-Keys [1]: [_groupingexpression#364]
-Functions [3]: [partial_avg(ROA#231), partial_sum(ASSET#206), partial_count(1)]
-Aggregate Attributes [4]: [sum#365, count#366L, sum#367, count#368L]
-Results [5]: [_groupingexpression#364, sum#369, count#370L, sum#371, count#372L]
+Input [3]: [ASSET#203, ROA#228, _groupingexpression#358]
+Keys [1]: [_groupingexpression#358]
+Functions [3]: [partial_avg(ROA#228), partial_sum(ASSET#203), partial_count(1)]
+Aggregate Attributes [4]: [sum#359, count#360L, sum#361, count#362L]
+Results [5]: [_groupingexpression#358, sum#363, count#364L, sum#365, count#366L]
 
 (5) Exchange
-Input [5]: [_groupingexpression#364, sum#369, count#370L, sum#371, count#372L]
-Arguments: hashpartitioning(_groupingexpression#364, 16), ENSURE_REQUIREMENTS, [plan_id=516]
+Input [5]: [_groupingexpression#358, sum#363, count#364L, sum#365, count#366L]
+Arguments: hashpartitioning(_groupingexpression#358, 16), ENSURE_REQUIREMENTS, [plan_id=516]
 
 (6) ShuffleQueryStage
-Output [5]: [_groupingexpression#364, sum#369, count#370L, sum#371, count#372L]
+Output [5]: [_groupingexpression#358, sum#363, count#364L, sum#365, count#366L]
 Arguments: 0
 
 (7) AQEShuffleRead
-Input [5]: [_groupingexpression#364, sum#369, count#370L, sum#371, count#372L]
+Input [5]: [_groupingexpression#358, sum#363, count#364L, sum#365, count#366L]
 Arguments: coalesced
 
 (8) HashAggregate [codegen id : 2]
-Input [5]: [_groupingexpression#364, sum#369, count#370L, sum#371, count#372L]
-Keys [1]: [_groupingexpression#364]
-Functions [3]: [avg(ROA#231), sum(ASSET#206), count(1)]
-Aggregate Attributes [3]: [avg(ROA#231)#302, sum(ASSET#206)#303, count(1)#301L]
-Results [4]: [_groupingexpression#364 AS yr#250, avg(ROA#231)#302 AS roa#251, sum(ASSET#206)#303 AS assets#252, count(1)#301L AS n#253L]
+Input [5]: [_groupingexpression#358, sum#363, count#364L, sum#365, count#366L]
+Keys [1]: [_groupingexpression#358]
+Functions [3]: [avg(ROA#228), sum(ASSET#203), count(1)]
+Aggregate Attributes [3]: [avg(ROA#228)#297, sum(ASSET#203)#298, count(1)#296L]
+Results [4]: [_groupingexpression#358 AS yr#246, avg(ROA#228)#297 AS roa#247, sum(ASSET#203)#298 AS assets#248, count(1)#296L AS n#249L]
 
 (9) Exchange
-Input [4]: [yr#250, roa#251, assets#252, n#253L]
-Arguments: rangepartitioning(yr#250 ASC NULLS FIRST, 16), ENSURE_REQUIREMENTS, [plan_id=546]
+Input [4]: [yr#246, roa#247, assets#248, n#249L]
+Arguments: rangepartitioning(yr#246 ASC NULLS FIRST, 16), ENSURE_REQUIREMENTS, [plan_id=546]
 
 (10) ShuffleQueryStage
-Output [4]: [yr#250, roa#251, assets#252, n#253L]
+Output [4]: [yr#246, roa#247, assets#248, n#249L]
 Arguments: 1
 
 (11) AQEShuffleRead
-Input [4]: [yr#250, roa#251, assets#252, n#253L]
+Input [4]: [yr#246, roa#247, assets#248, n#249L]
 Arguments: coalesced
 
 (12) Sort [codegen id : 3]
-Input [4]: [yr#250, roa#251, assets#252, n#253L]
-Arguments: [yr#250 ASC NULLS FIRST], true, 0
+Input [4]: [yr#246, roa#247, assets#248, n#249L]
+Arguments: [yr#246 ASC NULLS FIRST], true, 0
 
 (13) ResultQueryStage
-Output [4]: [yr#250, roa#251, assets#252, n#253L]
+Output [4]: [yr#246, roa#247, assets#248, n#249L]
 Arguments: 2
 
 (14) Project
-Output [3]: [ASSET#206, ROA#231, year(REPDTE#204) AS _groupingexpression#364]
-Input [3]: [REPDTE#204, ASSET#206, ROA#231]
+Output [3]: [ASSET#203, ROA#228, year(REPDTE#201) AS _groupingexpression#358]
+Input [3]: [REPDTE#201, ASSET#203, ROA#228]
 
 (15) HashAggregate
-Input [3]: [ASSET#206, ROA#231, _groupingexpression#364]
-Keys [1]: [_groupingexpression#364]
-Functions [3]: [partial_avg(ROA#231), partial_sum(ASSET#206), partial_count(1)]
-Aggregate Attributes [4]: [sum#365, count#366L, sum#367, count#368L]
-Results [5]: [_groupingexpression#364, sum#369, count#370L, sum#371, count#372L]
+Input [3]: [ASSET#203, ROA#228, _groupingexpression#358]
+Keys [1]: [_groupingexpression#358]
+Functions [3]: [partial_avg(ROA#228), partial_sum(ASSET#203), partial_count(1)]
+Aggregate Attributes [4]: [sum#359, count#360L, sum#361, count#362L]
+Results [5]: [_groupingexpression#358, sum#363, count#364L, sum#365, count#366L]
 
 (16) Exchange
-Input [5]: [_groupingexpression#364, sum#369, count#370L, sum#371, count#372L]
-Arguments: hashpartitioning(_groupingexpression#364, 16), ENSURE_REQUIREMENTS, [plan_id=491]
+Input [5]: [_groupingexpression#358, sum#363, count#364L, sum#365, count#366L]
+Arguments: hashpartitioning(_groupingexpression#358, 16), ENSURE_REQUIREMENTS, [plan_id=491]
 
 (17) HashAggregate
-Input [5]: [_groupingexpression#364, sum#369, count#370L, sum#371, count#372L]
-Keys [1]: [_groupingexpression#364]
-Functions [3]: [avg(ROA#231), sum(ASSET#206), count(1)]
-Aggregate Attributes [3]: [avg(ROA#231)#302, sum(ASSET#206)#303, count(1)#301L]
-Results [4]: [_groupingexpression#364 AS yr#250, avg(ROA#231)#302 AS roa#251, sum(ASSET#206)#303 AS assets#252, count(1)#301L AS n#253L]
+Input [5]: [_groupingexpression#358, sum#363, count#364L, sum#365, count#366L]
+Keys [1]: [_groupingexpression#358]
+Functions [3]: [avg(ROA#228), sum(ASSET#203), count(1)]
+Aggregate Attributes [3]: [avg(ROA#228)#297, sum(ASSET#203)#298, count(1)#296L]
+Results [4]: [_groupingexpression#358 AS yr#246, avg(ROA#228)#297 AS roa#247, sum(ASSET#203)#298 AS assets#248, count(1)#296L AS n#249L]
 
 (18) Exchange
-Input [4]: [yr#250, roa#251, assets#252, n#253L]
-Arguments: rangepartitioning(yr#250 ASC NULLS FIRST, 16), ENSURE_REQUIREMENTS, [plan_id=494]
+Input [4]: [yr#246, roa#247, assets#248, n#249L]
+Arguments: rangepartitioning(yr#246 ASC NULLS FIRST, 16), ENSURE_REQUIREMENTS, [plan_id=494]
 
 (19) Sort
-Input [4]: [yr#250, roa#251, assets#252, n#253L]
-Arguments: [yr#250 ASC NULLS FIRST], true, 0
+Input [4]: [yr#246, roa#247, assets#248, n#249L]
+Arguments: [yr#246 ASC NULLS FIRST], true, 0
 
 (20) AdaptiveSparkPlan
-Output [4]: [yr#250, roa#251, assets#252, n#253L]
+Output [4]: [yr#246, roa#247, assets#248, n#249L]
 Arguments: isFinalPlan=true
 
 
