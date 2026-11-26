@@ -11,8 +11,15 @@ IMPLS = ["pandas", "polars_eager", "polars_lazy", "polars_streaming"]
 
 
 def peak_mb():
+    try:                                   # Linux: VmHWM = dinh RSS that cua process
+        with open("/proc/self/status") as f:
+            for line in f:
+                if line.startswith("VmHWM:"):
+                    return int(line.split()[1]) * 1024 / 1e6
+    except OSError:
+        pass
     mi = psutil.Process().memory_info()
-    return getattr(mi, "peak_wset", mi.rss) / 1e6      # Windows: true peak; Linux/macOS: current RSS (approximation)
+    return getattr(mi, "peak_wset", mi.rss) / 1e6
 
 
 # ---------- pandas ----------
