@@ -1,5 +1,0 @@
-sample,model,n_rows,n_pos,pr_auc,roc_auc
-Dev OOF Full (1989-2006),logit_all,839802,4214,0.2869,0.9577
-Dev OOF Full (1989-2006),hgb_all,839802,4214,0.3419,0.9793
-Dev OOF Excl. <=45d Lag,logit_all,839308,3720,0.2538,0.9563
-Dev OOF Excl. <=45d Lag,hgb_all,839308,3720,0.3087,0.979
