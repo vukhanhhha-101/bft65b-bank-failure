@@ -1,5 +1,0 @@
-agg=True
-window=True
-label_sum=True
-spark_y=10904
-polars_y=10904
