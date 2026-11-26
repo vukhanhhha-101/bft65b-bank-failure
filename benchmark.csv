@@ -1,0 +1,13 @@
+scale,task,impl,time_median_s,time_min_s,peak_mb,check
+1,agg,pandas,0.81,0.54,337,0.572994
+1,agg,polars_eager,0.22,0.22,286,0.572994
+1,agg,polars_lazy,0.11,0.11,216,0.572994
+1,agg,polars_streaming,0.08,0.08,168,0.572994
+1,window,pandas,2.32,2.3,614,0.140757
+1,window,polars_eager,1.26,0.74,386,0.140757
+1,window,polars_lazy,0.68,0.67,335,0.140757
+1,window,polars_streaming,0.72,0.68,328,0.140757
+1,join,pandas,0.78,0.71,428,10904.0
+1,join,polars_eager,0.36,0.34,331,10904.0
+1,join,polars_lazy,0.27,0.26,287,10904.0
+1,join,polars_streaming,0.17,0.17,172,10904.0
