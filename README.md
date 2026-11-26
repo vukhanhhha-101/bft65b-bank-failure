@@ -1,3 +1,4 @@
+
 # BFT65B – A Big-Data Pipeline for Bank-Failure Early Warning (FDIC)
 
 | | |
@@ -6,148 +7,413 @@
 | **Student ID** | 11230955 |
 | **Course** | BFT65B – Big Data Analytics in Finance, National Economics University |
 | **Repository** | https://github.com/vukhanhhha-101/bft65b-bank-failure |
-| **Data** | FDIC BankFind public API (https://api.fdic.gov/banks), downloaded on <DOWNLOAD_DATE> |
-| **Environment** | Google Colab, Python 3.13, Java 21 (PySpark); exact package versions in `requirements.txt`; random seed 42 |
+| **Data** | FDIC BankFind public API (https://api.fdic.gov/banks), downloaded using the course data-acquisition workflow |
+| **Environment** | Google Colab, Python 3.13, Java 21 (PySpark); package versions specified in `requirements.txt`; random seed 42 |
 
-## 1. What this project answers
+---
 
-The project builds a reproducible big-data pipeline on public FDIC data (US) as a prototype for a bank-failure early-warning
-system. Most of the effort goes into the data pipeline, not into model accuracy. It answers the three questions of the exam:
+## 1. Project Overview
 
-* **Q1 – storage and processing.** How should four decades of bank reports be stored and processed on a laptop, and when would a Spark cluster be needed?
-* **Q2 – data quality.** Which quality problems do the raw data contain, and how does the pipeline treat them?
-* **Q3 – validation.** Can the pipeline output support an honestly validated early-warning model?
+This project develops a reproducible big-data pipeline using publicly available US Federal Deposit Insurance Corporation (FDIC) data to support a bank-failure early-warning system.
 
-## 2. Data
+The main focus is the end-to-end data engineering process rather than maximising predictive accuracy. The project covers data acquisition, storage optimisation, data-quality assessment, scalable processing, feature engineering, temporal validation and model evaluation.
 
-| Table | Content | Size used |
-|---|---|---|
-| Financials | quarterly Call Reports, 1984Q1–2026Q2, 33 fields (3 keys + 30 Call Report fields) | 170 quarters, 1,682,738 rows (one Parquet file per quarter; rows equal the API total for every quarter; no duplicate CERT–REPDTE) |
-| Failures | FDIC failure and assistance records | 4,117 records (RESTYPE = FAILURE or ASSISTANCE) |
-| Institutions | bank reference data (ACTIVE, CHANGEC1, …) | 27,838 records |
+It addresses three main research questions:
 
-Amounts are in thousands of USD and ratios in percent. Download method: the course starter script `src/fdic_download_starter.py`
-(resumable, one file per quarter, manifest with API totals). `src/01b_verify_small_tables.py` extends the completeness check to the
-Failures and Institutions tables. The data files are not committed (`.gitignore`).
+- **Q1 – Storage and processing:** How can several decades of bank reports be stored and processed efficiently on a standard machine, and when would distributed processing become necessary?
+- **Q2 – Data quality and temporal integrity:** What quality problems exist in the raw data, and how can the pipeline address them while reducing look-ahead risk?
+- **Q3 – Model validation:** How effectively can the resulting pipeline support an early-warning model, and what limitations affect the reliability of its evaluation?
 
-## 3. Repository structure
+## 2. Data Sources and Acquisition
+
+The project uses three main FDIC datasets.
+
+| Dataset | Description | Size used |
+|---|---|---:|
+| Financials | Quarterly Call Reports, 1984Q1–2026Q2, 33 fields (3 keys and 30 financial fields) | 170 quarters, 1,682,738 rows |
+| Failures | FDIC failure and assistance records | 4,117 records |
+| Institutions | Bank reference and institutional information | 27,838 records |
+
+Financial amounts are expressed in thousands of USD and financial ratios in percentage terms.
+
+Data acquisition uses the course-provided starter script `src/fdic_download_starter.py`. The download process supports resumption, stores quarterly data separately and maintains a manifest containing API totals.
+
+The script `src/01b_verify_small_tables.py` extends completeness verification to the Failures and Institutions datasets.
+
+The downloaded raw data are excluded from GitHub through `.gitignore` to avoid committing large data files. They can be regenerated using the documented acquisition process.
+
+## 3. Repository Structure
 
 ```text
 bft65b-bank-failure/
-├── BFT65B_pipeline.ipynb        notebook that runs the whole project and displays every result
-├── README.md   requirements.txt   run_all.sh   .gitignore
+│
+├── BFT65B_pipeline.ipynb
+├── README.md
+├── requirements.txt
+├── run_all.sh
+├── .gitignore
+│
 ├── src/
-│   ├── fdic_download_starter.py   course starter (unchanged)
-│   ├── config.py                  paths, seed, dates, split, cost assumption
-│   ├── 01b_verify_small_tables.py completeness check of Failures / Institutions
-│   ├── 02_storage.py              schema + storage-layout benchmark              (Part 1)
-│   ├── 03_quality.py              automated data-quality report                  (Part 2)
-│   ├── 04_panel.py                clean bank-quarter panel, exit types, label    (Part 2)
-│   ├── 04b_label_sensitivity.py   failure vs assistance label sensitivity        (Part 2)
-│   ├── 05_benchmark.py            Polars vs pandas, execution plans              (Part 3)
-│   ├── 06_spark.py                PySpark reproduction, plans, partitions        (Part 3)
-│   ├── 06b_spark_scaleup.py       Polars vs Spark scale-up                       (Part 3)
-│   ├── 07_features.py             point-in-time feature table + tests            (Part 4)
-│   ├── 08_model.py                validation, thresholds, single test evaluation (Part 5)
-│   ├── 08b_lag_sensitivity.py     publication-lag sensitivity on development data(Part 5)
-│   ├── 09_mllib.py                Spark MLlib demo (development data only)       (Part 5)
-│   ├── 10_dev_diagnostics.py      development-only diagnostics                   (Part 5)
-│   └── 11_test_descriptives.py    descriptive tables and paired bootstrap        (Part 5)
-├── reports/                      tables and figures produced by the scripts (all numbers in the report come from here)
-└── tools/check_submission.py     pre-submission audit
+│   ├── fdic_download_starter.py
+│   ├── config.py
+│   ├── 01b_verify_small_tables.py
+│   ├── 02_storage.py
+│   ├── 03_quality.py
+│   ├── 04_panel.py
+│   ├── 04b_label_sensitivity.py
+│   ├── 04c_failure_funnel.py
+│   ├── 05_benchmark.py
+│   ├── 06_spark.py
+│   ├── 06b_spark_scaleup.py
+│   ├── 07_features.py
+│   ├── 08_model.py
+│   ├── 08b_lag_sensitivity.py
+│   ├── 09_mllib.py
+│   └── 11_test_descriptives.py
+│
+├── reports/
+│   └── Experimental outputs, tables and diagnostics
+│
+└── tools/
+    └── check_submission.py
 ```
 
-## 4. Design
+The main notebook provides an integrated presentation of the project, while the Python scripts implement the individual pipeline stages.
 
-### 4.1 Storage (Part 1)
-Fixed schema (CERT Int32, REPDTE Date, amounts Float64). Five layouts are compared on the full panel (size, write time, two typical queries; best of 3 runs):
+The `reports/` directory stores generated experimental results, and `tools/check_submission.py` provides a pre-submission audit.
 
-| Layout | Size (MB) | Query A: 2 columns, all years (s) | Query B: one year, all columns (s) |
-|---|---|---|---|
+## 4. Pipeline Design and Methodology
+
+### 4.1. Data Storage and Optimisation (Part 1)
+
+The project compares five storage configurations using the full bank-quarter panel. The comparison considers storage size, write performance and representative analytical queries.
+
+| Storage format | Size (MB) | Query A: Two columns, all years (s) | Query B: One year, all columns (s) |
+|---|---:|---:|---:|
 | CSV | 446.4 | 3.408 | 3.469 |
 | Parquet, uncompressed | 395.4 | 0.097 | 0.386 |
-| Parquet, snappy | 209.6 | 0.102 | 0.702 |
-| Parquet, zstd-3 | 149.2 | 0.117 | 1.054 |
-| **Parquet, zstd-3, partitioned by year (chosen)** | 156.3 | 0.296 | 0.086 |
+| Parquet, Snappy | 209.6 | 0.102 | 0.702 |
+| Parquet, Zstandard level 3 | 149.2 | 0.117 | 1.054 |
+| **Parquet, Zstandard level 3, partitioned by year** | **156.3** | **0.296** | **0.086** |
 
-The chosen layout is about 2.9x smaller than CSV and extracts one year about 40x faster; all-years scans are slower than a single zstd file, which is the price of partition pruning (see `reports/storage_benchmark.csv`).
+Year-partitioned Parquet with Zstandard compression is selected as the primary storage layout.
 
-### 4.2 Data quality and panel (Part 2)
-`03_quality.py` checks completeness against API totals, missing values by decade, 12 validity rules, whether flow variables are year-to-date,
-gaps in bank histories, extreme values, exit types and the Failures table. `04_panel.py` builds the clean panel: de-duplication, de-cumulation of
-year-to-date flows (NETINC, INTINC, EINTEXP, NONII, NONIX, ELNATR), removal of reports dated on/after the failure date, exit classification
-(failure / other exit / active; the exit type is never used as a feature) and the label.
+It reduces storage requirements by approximately 65% compared with CSV and makes one-year extraction approximately 40 times faster.
 
-### 4.3 Label
-`y(i,q) = 1` if the earliest FAILURE date of bank *i* lies in (REPDTE of quarter *q*, REPDTE + 1 year]; otherwise 0. Only records with `RESTYPE = "FAILURE"` count as failures; assistance transactions are not failures (sensitivity in `reports/label_sensitivity.csv`);
-mergers and other exits get `y = 0`. Reports dated on/after the failure date are removed. Rows with a report date up to 2025-06-30 are used, because later labels are incomplete.
+Although a partitioned layout introduces some overhead for full-dataset scans, it improves selective access to individual reporting years through partition pruning.
 
-### 4.4 Development / test split
-Report quarters: development 1984Q1–2006Q4, gap 2007Q1–2008Q4 (8 quarters), test 2009Q1–2014Q4 (469 failed banks in the test period, 2,290 in development).
-The test period follows the development period with a gap longer than the required four quarters and contains far more than 50 failures. Tuning, feature choices and the threshold use the development period only.
+Results are available in `reports/storage_benchmark.csv`.
 
-### 4.5 Features (Part 4)
-31 point-in-time features in CAMELS groups: capital (equity ratio, regulatory capital ratios), asset quality (non-performing, past-due and non-accrual ratios, OREO, reserves, Texas ratio),
-earnings (ROA, ROE, margin, quarterly ROA, provisions, cost-to-income), liquidity and funding, loan mix and growth, size, and 4-quarter changes. Lags are quarter-aware (a lag is `null` if the bank has a gap).
-Flow variables are de-cumulated; a truncation test recomputes the features with data only up to three cut-off quarters and requires identical values (`reports/pit_test.txt`).
-**Important limitation:** in the main results the report of quarter *q* is used to predict failures after the end of quarter *q*, although a Call Report is published about 30–45 days later. The publication lag is therefore **not** enforced in the main results.
-`src/08b_lag_sensitivity.py` quantifies the effect on development data: excluding positive rows whose failure falls within 45 days of the report removes 494 of 4,214 positive rows (11.7%) and lowers the pooled out-of-fold PR-AUC of the gradient-boosting model from 0.342 to 0.309 (logit: 0.287 to 0.254) (`reports/dev_lag_sensitivity.csv`).
-The performance figures should therefore be read as optimistic.
+### 4.2. Data Quality and Panel Construction (Part 2)
 
-### 4.6 Modelling and validation (Part 5)
-* **Models:** Texas-ratio rule, baseline logistic regression on 4 ratios, logistic regression on all features, HistGradientBoosting (max depth 4, 200 iterations). All preprocessing (winsorising, imputation, scaling) is inside a scikit-learn `Pipeline` fitted on training data only.
-* **Validation:** expanding-window cross-validation on the development period, four folds (1989Q1–1991Q4, 1992Q1–1994Q4, 1995Q1–2000Q4, 2001Q1–2006Q4), purge of 5 quarters so that no training label window overlaps a validation period.
-* **Metrics:** PR-AUC (primary), ROC-AUC, recall, precision, alarm rate and expected cost; accuracy is not used. Test confidence intervals use a bank-clustered bootstrap.
-* **Alarm threshold:** minimises expected cost on development out-of-fold predictions. The cost of a missed failure comes from the data: the mean `COST` of failures in the development period (54,252 thousand USD per failed bank, 2,393 observations; 3.80 positive rows per failed bank), divided over the positive rows per failed bank. The cost of a false alarm is an **assumption** (50 thousand USD per review, `C_FALSE_ALARM_K` in `src/config.py`); `reports/threshold_sensitivity.csv` shows the thresholds for 10–500 thousand USD.
-* **Spark MLlib:** `09_mllib.py` trains logistic regression and GBT on development data only.
-* **Test protocol:** `python src/08_model.py --stage test` evaluates the test period once and writes `reports/TEST_USED.flag`, which blocks a second run on the same machine. The flag is not committed (`.gitignore`), so `run_all.sh` on a fresh clone runs the test stage once. The test period was evaluated once with this pipeline version.
+The raw FDIC datasets contain several challenges:
 
-## 5. Main measured results
+- Missing observations and incomplete historical coverage.
+- Cumulative year-to-date financial flow variables.
+- Extreme financial values and potential data inconsistencies.
+- Gaps in bank reporting histories.
+- Multiple institutional exit types.
+- Differences between reporting dates and actual information availability.
 
-| Topic | Result |
+The pipeline addresses these issues through automated data-quality checks, schema validation, duplicate handling, bank-level reconciliation and quarterly de-cumulation of year-to-date flow variables.
+
+The main financial flows processed include NETINC, INTINC, EINTEXP, NONII, NONIX and ELNATR.
+
+The panel distinguishes failures, other institutional exits and active institutions. Exit classifications are used for label construction and are not included as predictive features.
+
+The failure funnel and label sensitivity analyses are provided in:
+
+- `reports/dq_report.md`
+- `reports/failure_funnel.csv`
+- `reports/label_sensitivity.csv`
+
+### 4.3. Failure Label Definition
+
+The target variable is defined as:
+
+`y(i,q) = 1`
+
+if the earliest FDIC FAILURE date of bank i occurs within the following one-year interval:
+
+`(REPDTE, REPDTE + 1 year]`
+
+Only records classified as `RESTYPE = "FAILURE"` are treated as failures.
+
+Assistance transactions, mergers and other institutional exits are not classified as bank failures.
+
+Reports dated on or after the failure date are removed to prevent the use of financial information recorded after institutional failure.
+
+Rows with reporting dates up to 2025-06-30 are retained because later outcome labels are incomplete.
+
+### 4.4. Development and Test Split
+
+The modelling dataset uses a chronological split:
+
+| Period | Reporting quarters | Purpose |
+|---|---|---|
+| Development | 1984Q1–2006Q4 | Feature development, model selection and threshold optimisation |
+| Gap | 2007Q1–2008Q4 | Eight-quarter temporal separation |
+| Test | 2009Q1–2014Q4 | Historical out-of-sample evaluation |
+
+The eight-quarter gap exceeds the required four-quarter separation.
+
+The stored development data contain 2,290 failed banks, while the test period contains 469 failed banks.
+
+Model selection, feature choices and threshold optimisation are performed using development data rather than the test results.
+
+### 4.5. Feature Engineering (Part 4)
+
+The feature pipeline constructs 31 point-in-time financial indicators organised around CAMELS dimensions:
+
+- **Capital:** Equity and regulatory capital ratios.
+- **Asset quality:** Non-performing loans, past-due loans, non-accrual assets, OREO, reserves and the Texas ratio.
+- **Earnings:** ROA, ROE, net interest margin, quarterly profitability, provisions and cost-to-income.
+- **Liquidity and funding:** Liquidity and funding-related indicators.
+- **Sensitivity and business structure:** Loan composition, growth, size and four-quarter changes.
+
+Financial flow variables are de-cumulated before feature calculation.
+
+Quarter-aware lags are used, and a lag is set to null when the corresponding bank has a reporting gap.
+
+A truncation test checks whether feature values remain identical when the underlying dataset is restricted to selected historical cut-off dates. The results are recorded in `reports/pit_test.txt`.
+
+**Important publication-lag limitation**
+
+The primary modelling experiment uses quarter q financial reports to predict failures after the end of quarter q. However, FDIC Call Reports are generally published approximately 30–45 days after the reporting date.
+
+Therefore, the primary pipeline does not fully enforce the actual publication delay. The truncation test checks historical feature construction but does not independently establish when each report became publicly available.
+
+A supplementary development-only sensitivity analysis in `src/08b_lag_sensitivity.py` examines the potential impact of a 45-day delay.
+
+It identifies 494 of 4,214 positive observations (11.7%) as failures occurring within 45 days after the reporting date. Excluding these observations reduces the pooled out-of-fold HistGradientBoosting PR-AUC from approximately 0.342 to 0.309, while Logistic Regression decreases from approximately 0.287 to 0.254.
+
+This sensitivity analysis demonstrates that publication timing is a material methodological issue. It does not establish that the primary pipeline has been fully corrected.
+
+Consequently, the primary performance figures should be interpreted as potentially optimistic.
+
+### 4.6. Modelling and Validation (Part 5)
+
+The project evaluates four modelling approaches:
+
+1. Texas-ratio benchmark.
+2. Logistic Regression using four financial ratios.
+3. Logistic Regression using all engineered features.
+4. HistGradientBoosting with maximum depth 4 and 200 iterations.
+
+All preprocessing operations, including winsorisation, imputation and scaling, are fitted within the training pipeline to avoid information leakage between training and validation observations.
+
+**Development validation**
+
+An expanding-window cross-validation strategy is applied using four chronological folds:
+
+- 1989Q1–1991Q4
+- 1992Q1–1994Q4
+- 1995Q1–2000Q4
+- 2001Q1–2006Q4
+
+A five-quarter purge is used to reduce overlap between training label windows and validation periods.
+
+**Evaluation metrics**
+
+PR-AUC is the primary evaluation metric because bank failures represent a relatively rare outcome.
+
+Additional metrics include ROC-AUC, recall, precision, alarm rate and expected cost.
+
+Accuracy is not used as the principal performance measure.
+
+**Threshold selection**
+
+The operating threshold is selected by minimising expected cost on development out-of-fold predictions.
+
+The missed-failure cost is estimated using observed FDIC failure COST data. The false-alarm review cost is an explicit modelling assumption of USD 50,000 per review, controlled through `C_FALSE_ALARM_K` in `src/config.py`.
+
+Threshold sensitivity results are available in `reports/threshold_sensitivity.csv`.
+
+**Spark MLlib**
+
+The script `src/09_mllib.py` demonstrates Logistic Regression and Gradient-Boosted Trees using Spark MLlib on development data only.
+
+**Test evaluation disclosure**
+
+The test period was accessed twice during the project: initially under the earlier pipeline and subsequently during the publication-timing correction workflow.
+
+The stored test artifacts reproduce the earlier evaluation metrics. They cannot be independently verified as outputs of a fully rebuilt, publication-lag-adjusted pipeline.
+
+Therefore, these metrics are retained as historical reference results, not presented as verified post-patch performance.
+
+The repeated test access is explicitly disclosed because it weakens the independence of the holdout evaluation. No claim is made that the test period was accessed only once.
+
+The saved results are available in:
+
+- `reports/test_results.csv`
+- `reports/test_bank_level.csv`
+- `reports/test_paired_bootstrap.csv`
+
+## 5. Main Experimental Results
+
+The following table summarises the principal recorded findings.
+
+| Topic | Main result |
 |---|---|
-| Storage | zstd partitioned by year: 156 MB vs 446 MB CSV; one-year query 0.086 s vs 3.469 s |
-| Polars vs pandas (1.7 M rows, median of 3 runs) | aggregation 0.32 s (lazy) vs 0.68 s; window features 0.86 s vs 2.67 s; label join 0.50 s vs 1.47 s; streaming lowers peak memory further (`reports/benchmark.csv`) |
-| Scale-up | the same tasks were replicated x4 and x8 (13.5 M rows) on one machine (`reports/benchmark_scaleup.csv`) |
-| PySpark vs Polars | aggregation, window and label-join results match (`reports/spark_match.txt`); execution plans in `reports/spark_plan_*.txt`; 16 shuffle partitions were faster than 200 for the aggregation (1.8 s vs 6.1 s) |
-| Development CV (pooled out-of-fold PR-AUC) | Texas rule 0.297, baseline logit 0.202, logit (all features) 0.287, HistGradientBoosting 0.342 (`reports/cv_pooled.csv`) |
-| Test period | see `reports/test_results.csv`, `reports/test_bank_level.csv`, `reports/test_paired_bootstrap.csv` |
+| Storage optimisation | Year-partitioned Zstandard Parquet: 156.3 MB versus 446.4 MB for CSV |
+| Selective extraction | One-year query: 0.086 seconds versus 3.469 seconds for CSV |
+| Polars aggregation | 0.32 seconds (lazy) versus 0.68 seconds for pandas |
+| Polars window features | 0.86 seconds versus 2.67 seconds for pandas |
+| Polars label join | 0.50 seconds versus 1.47 seconds for pandas |
+| Scale-up benchmark | Workloads replicated at 4x and 8x, reaching approximately 13.5 million rows |
+| Spark execution | Aggregation, window and label-join outputs match Polars in the recorded checks |
+| Spark partition experiment | 16 shuffle partitions outperform 200 for the measured aggregation: 1.8 versus 6.1 seconds |
+| Development PR-AUC | Texas rule: 0.297; baseline Logistic Regression: 0.202; all-feature Logistic Regression: 0.287; HistGradientBoosting: 0.342 |
+| Publication-lag sensitivity | HGB PR-AUC decreases from 0.342 to 0.309 |
+| Historical test results | Stored in `test_results.csv`, `test_bank_level.csv` and `test_paired_bootstrap.csv` |
 
-## 6. How to run
+The results demonstrate that Polars provides an efficient processing solution for the current dataset scale, while Spark offers a reproducible distributed-processing demonstration.
 
-**Google Colab (as developed).**
+The development results favour HistGradientBoosting, but the stored test results show that model rankings can change across evaluation periods.
+
+All test results must be interpreted in light of the repeated test access and publication-lag limitations described above.
+
+## 6. Reproducibility and How to Run
+
+### 6.1. Environment
+
+The project was developed in Google Colab using Python 3.13 and Java 21 for PySpark.
+
+Required Python package versions are specified in `requirements.txt`.
+
+The random seed is set to 42 for reproducibility where supported by the relevant libraries.
+
+### 6.2. Google Colab
+
+Clone the repository:
+
 ```python
-from google.colab import drive; drive.mount("/content/drive")
 !git clone https://github.com/vukhanhhha-101/bft65b-bank-failure.git
 %cd bft65b-bank-failure
-!pip install -q -r requirements.txt
+```
+
+Install the required packages:
+
+```python
+!pip install -r requirements.txt
+```
+
+Run the pipeline:
+
+```python
 !bash run_all.sh
 ```
-**Local machine.** Python 3.11+ (developed with 3.13), Java 17+ for PySpark, Git Bash / WSL / Linux / macOS for `run_all.sh`:
+
+The pipeline downloads the FDIC data, executes data verification, storage and quality processing, benchmarks, feature engineering and development-stage modelling.
+
+**Test evaluation is disabled by default in the submitted `run_all.sh`.** This is intentional to prevent accidental reuse of the previously accessed test period.
+
+The script preserves existing test artifacts and does not automatically perform another test evaluation.
+
+### 6.3. Local Execution
+
+The repository can also be cloned and executed locally using Git Bash, WSL, Linux or macOS.
+
 ```bash
-git clone https://github.com/vukhanhhha-101/bft65b-bank-failure.git && cd bft65b-bank-failure
-python -m venv .venv && source .venv/bin/activate
+git clone https://github.com/vukhanhhha-101/bft65b-bank-failure.git
+
+cd bft65b-bank-failure
+
+python -m venv .venv
+
+source .venv/bin/activate
+
 pip install -r requirements.txt
+
 bash run_all.sh
 ```
-A quick connectivity test: `python src/fdic_download_starter.py --start 2023-03-31 --end 2023-12-31 --out data_raw/smoke`.
-The full download takes about one hour and is resumable (re-run the same command). `BFT65B_pipeline.ipynb` runs the same scripts step by step
-and skips steps whose output already exists (`FORCE = True` recomputes). Before submitting, `python tools/check_submission.py BFT65B_pipeline.ipynb .` checks script references, saved errors, version pins and `.gitignore`.
 
-Generated folders: `data_raw/` (downloads and manifest) and `data_proc/` (processed Parquet files) are created locally and are not committed.
+Java is required for PySpark.
 
-## 7. Limitations
-1. **Publication lag not enforced** (section 4.5): the main performance figures use information that would not yet have been published at the decision date. The sensitivity analysis shows a drop of about 3 PR-AUC points on development data.
-2. The Texas-ratio rule is compared by PR-AUC/ROC-AUC; no cost-based alarm threshold is reported for it in the test table.
-3. Data are the latest (restated) Call Report values, not the values as first filed.
-4. Assistance transactions are not counted as failures; 485 FAILURE records have no CERT (all before 1984, outside the panel) and cannot be linked.
-5. The false-alarm cost is an assumption (sensitivity table provided); one crisis (2009–2014) is used as the test period; rows of the same bank are correlated (bank-clustered bootstrap is used for the intervals).
-6. The MLlib demo is untuned and runs on development data only; benchmarks come from one Colab machine, and Spark in local mode is only a proxy for a cluster.
-7. For Vietnam: supervisory data are not public, filing lags and failure histories differ and failures are far fewer, so the cost-based threshold and the validation design would have to be re-estimated locally.
+### 6.4. Data Download
 
-## 8. AI assistance and sources
+A short connectivity test can be performed using:
 
-Claude (Anthropic) was used to help draft and review parts of the pipeline code, the notebook and this documentation. <AI_SELF_DESCRIPTION: state exactly what you wrote, changed and verified yourself.>
-The author ran the pipeline, inspected the outputs and is responsible for the content.
+```bash
+python src/fdic_download_starter.py \
+    --start 2023-03-31 \
+    --end 2023-12-31 \
+    --out data_raw/smoke
+```
 
-Other sources: the course starter script `fdic_download_starter.py` (BFT65B, NEU); FDIC BankFind API documentation (https://api.fdic.gov/banks/docs/); the documentation of Polars, pandas, scikit-learn and PySpark.
+The full historical download may take approximately one hour, depending on network and execution conditions. The download process supports resumption.
+
+### 6.5. Generated Outputs
+
+The pipeline creates the following local directories:
+
+- `data_raw/`: Downloaded FDIC data and acquisition manifests.
+- `data_proc/`: Processed Parquet datasets and modelling panels.
+- `reports/`: Data-quality reports, benchmarks, model results and diagnostics.
+
+Large raw and processed datasets are excluded from the repository through `.gitignore`.
+
+The notebook `BFT65B_pipeline.ipynb` provides a step-by-step presentation of the project and its saved outputs.
+
+The pre-submission audit can be run using:
+
+```bash
+python tools/check_submission.py BFT65B_pipeline.ipynb .
+```
+
+This checks notebook references, saved execution errors, dependency pins and `.gitignore` configuration.
+
+## 7. Limitations and Future Improvements
+
+Several limitations should be considered when interpreting the results.
+
+1. **Publication timing:** The primary experiment does not fully enforce the 30–45-day reporting publication delay. The development sensitivity analysis demonstrates a material reduction in predictive performance when observations affected by the assumed delay are excluded.
+
+2. **Historical financial data:** The FDIC dataset contains the latest available, potentially restated Call Report values rather than exclusively first-filed historical values.
+
+3. **Institutional exits:** Assistance transactions are not classified as failures. A total of 485 FAILURE records have no CERT identifier and cannot be linked to the modelling panel; these records predate 1984 and fall outside the analysed panel.
+
+4. **False-alarm costs:** The assumed review cost is not directly observed supervisory expenditure. Cost-based thresholds should therefore be interpreted as scenario-dependent.
+
+5. **Temporal and institutional dependence:** Observations from the same bank are correlated. Bank-clustered bootstrap analysis is used for test confidence intervals, but additional institutional and crisis-regime validation would strengthen the findings.
+
+6. **Historical generalisation:** The test period represents one historical crisis regime. Model performance may differ under other economic and regulatory conditions.
+
+7. **Computational scope:** Benchmarks were conducted in one Google Colab environment. The PySpark local-mode implementation demonstrates distributed-processing concepts but does not represent a production cluster. The MLlib demonstration is also not fully tuned.
+
+8. **Evaluation independence:** The test period was accessed twice during the project. The stored results are therefore disclosed as historical reference results rather than as a completely untouched final holdout.
+
+### Implications for Vietnam
+
+The pipeline provides a methodological foundation for developing a bank-failure early-warning system in Vietnam, but US FDIC data, failure definitions and model thresholds cannot be transferred directly.
+
+A Vietnamese implementation would require authorised supervisory data from the State Bank of Vietnam (SBV), potentially including quarterly financial statements, capital adequacy, liquidity, asset quality, profitability and credit exposure.
+
+Data processing and feature engineering would need to reflect Vietnamese accounting standards, reporting formats, bank identifiers and regulatory classifications.
+
+Actual report publication timestamps should replace the assumed US publication delay. Failure definitions, prediction horizons, cost assumptions and decision thresholds would need to be recalibrated using Vietnamese historical banking data.
+
+The system should initially support supervisory decision-making through risk ranking, early-warning indicators and explainable signals rather than automatically determining whether an institution will fail.
+
+The main contribution to Vietnam is therefore a reproducible and scalable data-engineering architecture that can be adapted to local supervisory data and regulatory requirements, rather than a directly transferable US-trained prediction model.
+
+## 8. AI Assistance, References and Academic Integrity
+
+ChatGPT (OpenAI) and Claude (Anthropic) were used as AI-assisted tools during the project for coding assistance, debugging, methodological discussion, documentation drafting and language editing.
+
+The student reviewed and modified the project materials, executed project workflows, inspected available outputs and is responsible for the submitted code, analysis, interpretations and methodological disclosures.
+
+AI-generated suggestions were not treated as independent experimental verification. All reported results are based on the project's saved experimental artifacts and are subject to the limitations explicitly documented in this repository.
+
+**References and technical documentation**
+
+1. Federal Deposit Insurance Corporation (FDIC). BankFind Suite and public API documentation. https://api.fdic.gov/banks/docs/
+2. BFT65B course materials and starter script, National Economics University.
+3. Polars official documentation. https://docs.pola.rs/
+4. pandas official documentation. https://pandas.pydata.org/docs/
+5. scikit-learn official documentation. https://scikit-learn.org/stable/
+6. Apache Spark official documentation. https://spark.apache.org/docs/latest/
+
+---
+
+**Final note:** This repository documents the implemented pipeline, recorded experimental results, methodological limitations and proposed improvements. Predictive results should be interpreted cautiously, particularly with respect to publication timing and repeated access to the test period.
