@@ -1,234 +1,58 @@
-# BFT65B – Big-Data Pipeline for Bank-Failure Early Warning
+# BFT65B – Big-Data Pipeline for Bank-Failure Early Warning (FDIC data)
 
-**Individual Final Project – National Economics University**
+Individual final report, National Economics University.
+**Name:** Vũ Khánh Hà · **Student ID:** 11230955 · **Repository:** https://github.com/vukhanhhha-101/bft65b-bank-failure
 
-- Author: [Your full name]
-- Student ID: [Your student ID]
-- Data source: FDIC BankFind Suite API
-- Research focus: Early warning signals of US bank failures.
+## Requirements
+- Python 3.11–3.13 (results in the report were produced on Google Colab, Python 3.13).
+- Java 17 or 21 (only for the PySpark steps; PySpark 4.0 does not run on Java 8/11). Check with `java -version`.
+- About 6 GB of free disk space for the raw data and processed files, 8 GB RAM or more.
+- All package versions are pinned in `requirements.txt`; all seeds are fixed (`SEED = 42` in `src/config.py`).
 
-## 1. Project Overview
-
-This project develops a reproducible big-data pipeline for analyzing and predicting US bank failures using historical FDIC bank financial data.
-
-The pipeline covers:
-- Data acquisition and validation
-- Data quality assessment
-- Panel construction and failure labeling
-- Storage and processing benchmarks
-- Feature engineering
-- Machine learning and model evaluation
-- Point-in-time and publication-lag validation
-
-## 2. Project Structure
-
-```text
-bft65b-bank-failure/
-├── README.md
-├── requirements.txt
-├── .gitignore
-├── run_all.sh
-├── src/
-├── reports/
-├── docs/
-├── notebooks/
-├── data_raw/       (not committed)
-└── data_proc/      (not committed)
-```
-
-## 3. Data Sources
-
-The project uses:
-- FDIC BankFind Suite API
-- Historical bank Call Reports
-- FDIC bank failure records
-
-API: https://api.fdic.gov/banks
-
-Raw and processed datasets are excluded from the public repository because of their size.
-
-## 4. Data Processing Pipeline
-
-| Stage | Script | Main purpose |
-|---|---|---|
-| Data verification | `01b_verify_small_tables.py` | Check missing and duplicate records |
-| Storage optimization | `02_storage.py` | Compare storage layouts |
-| Data quality | `03_quality.py` | Audit completeness and validity |
-| Panel construction | `04_panel.py` | Build clean point-in-time panel |
-| Label sensitivity | `04b_label_sensitivity.py` | Compare label definitions |
-| Failure funnel | `04c_failure_funnel.py` | Reconcile failure records |
-| Benchmarking | `05_benchmark.py` | Compare processing performance |
-| Spark processing | `06_spark.py` | PySpark replication |
-| Spark scale-up | `06b_spark_scaleup.py` | Evaluate scalability |
-| Feature engineering | `07_features.py` | Construct financial predictors |
-| Modelling | `08_model.py` | Train and evaluate models |
-| Lag sensitivity | `08b_lag_sensitivity.py` | Examine publication lag |
-| MLlib | `09_mllib.py` | Distributed ML demonstration |
-| Diagnostics | `10_dev_diagnostics.py` | Development diagnostics |
-| Test descriptives | `11_test_descriptives.py` | Descriptive test analysis |
-
-## 5. Methodology
-
-### 5.1 Failure Definition
-
-The primary failure definition uses records with:
-
-`RESTYPE == "FAILURE"`
-
-ASSISTANCE-only records are not classified as failures under the primary definition.
-
-The target variable identifies a failure occurring within the subsequent 12-month prediction horizon.
-
-Mergers and other exits are not automatically classified as failures.
-
-### 5.2 Point-in-Time Design
-
-The pipeline applies a publication-lag restriction to prevent financial information from being used before it would have been available.
-
-The configured reporting lag is three months, with a minimum publication lag requirement of 45 days.
-
-### 5.3 Feature Engineering
-
-Financial predictors cover:
-- Capital adequacy and leverage
-- Asset quality
-- Loan composition
-- Liquidity and deposits
-- Profitability
-- Four-quarter financial changes
-- Historical ROA indicators
-
-Year-to-date flow variables are de-cumulated before modelling.
-
-## 6. Models and Development Results
-
-Four models are evaluated:
-
-1. Texas Ratio
-2. Baseline Logistic Regression
-3. Full Logistic Regression
-4. HistGradientBoosting
-
-The current development artifacts contain:
-- 1,183,030 development observations
-- 2,264 failed banks
-
-### Pooled Cross-Validation Results
-
-| Model | PR-AUC | ROC-AUC |
-|---|---:|---:|
-| Texas Ratio | 0.290535 | 0.842315 |
-| Baseline Logistic Regression | 0.163185 | 0.952469 |
-| Full Logistic Regression | 0.232595 | 0.943204 |
-| HistGradientBoosting | 0.283979 | 0.972989 |
-
-HistGradientBoosting achieves the highest ROC-AUC and the lowest estimated development cross-validation cost.
-
-Texas Ratio achieves the highest pooled PR-AUC.
-
-This illustrates that model performance depends on the evaluation metric.
-
-## 7. Data Quality and Validation
-
-The current pipeline has produced the following validation results:
-
-- 1,682,738 raw financial panel observations
-- 24,064 banks in the raw panel
-- Zero duplicate `(CERT, REPDTE)` records
-- Zero quarters with API row-count mismatches
-- Point-in-time tests passed at three cut-offs
-- Publication-lag test passed with a minimum observed gap of 90 days
-
-The current feature dataset contains:
-- 1,656,978 observations
-- 31 explanatory features
-- 38 columns including identifiers and labels
-
-The four-quarter ROA mean is calculated only when four consecutive quarterly observations are available.
-
-## 8. Test Evaluation Status
-
-An earlier test evaluation was conducted on November 21, 2026, before subsequent publication-lag and panel updates.
-
-The earlier results are archived separately under:
-
-`reports/archive_pre_lag_fix/`
-
-They are not presented as final test results for the current pipeline.
-
-The current development artifacts were generated after the pipeline updates. An independent test evaluation for this updated version has not been established.
-
-The test-use flag is retained to preserve the evaluation history and prevent accidental reuse.
-
-## 9. Reproducibility
-
-### Verified development environment
-
-The project was developed and tested in the following environment:
-
-- Python 3.13.18
-- OpenJDK 21.0.12.1
-- NumPy 2.4.6
-- Pandas 2.2.3
-- Polars 1.35.2
-- Scikit-learn 1.6.1
-- PySpark 4.0.5
-- PyArrow 23.0.1
-- Joblib 1.6.0
-- Requests 2.32.4
-- Matplotlib 3.10.0
-- Psutil 5.9.5
-
-Install dependencies using:
-
+## Quick start
 ```bash
+git clone https://github.com/vukhanhhha-101/bft65b-bank-failure.git && cd bft65b-bank-failure
+python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+python src/fdic_download_starter.py --start 2023-03-31 --end 2023-12-31   # smoke test (~3 min)
+bash run_all.sh                                          # full run: download ~1 h, remaining steps ~30-60 min
 ```
+Data are never committed (`data_raw/` and `data_proc/` are git-ignored).
+On Google Colab, open `BFT65B_pipeline.ipynb`: it clones this repository, installs `requirements.txt` and runs the steps in order.
+A step is skipped when its output already exists in `reports/` (set `FORCE = True` in the notebook to recompute).
 
-The versions in `requirements.txt` correspond to the verified Google Colab environment.
+## The test period is evaluated once
+`python src/08_model.py --stage test` writes `reports/TEST_USED.flag` and refuses to run again.
+The committed `reports/test_results.csv` is the result of that single run. `run_all.sh` therefore skips the test stage when the flag exists.
+To reproduce the test numbers from scratch on a fresh clone, run `FORCE_TEST=1 bash run_all.sh` (this deletes the flag first and re-runs the same frozen pipeline; it does not change any development decision).
 
-To reproduce the project:
+## Pipeline
+| Step | Script | Main outputs (in `reports/`) |
+|---|---|---|
+| Download (resumable, verified against API totals) | `src/fdic_download_starter.py` | `manifest_financials.json` |
+| P1 verify small tables | `src/01b_verify_small_tables.py` | `small_tables_check.json` |
+| P1 storage layouts | `src/02_storage.py` | `storage_benchmark.csv` |
+| P2 data-quality audit | `src/03_quality.py` | `dq_report.md`, `dq_overview.png` |
+| P2 clean point-in-time panel + label | `src/04_panel.py` | `panel_summary.json` |
+| P2 label sensitivity | `src/04b_label_sensitivity.py` | `label_sensitivity.csv`, `assistance_continuity.csv` |
+| P3 Polars vs pandas benchmark, query plans | `src/05_benchmark.py` | `benchmark*.csv`, `polars_plan_*.txt` |
+| P3 PySpark replication + match check | `src/06_spark.py` | `spark_match.txt`, `spark_plan_*.txt`, `spark_timing.csv` |
+| P3 Polars vs Spark scale-up | `src/06b_spark_scaleup.py` | `spark_scaleup.csv` |
+| P4 features + look-ahead test | `src/07_features.py` | `pit_test.txt` |
+| P5 CV, baselines, models, threshold; **single** test | `src/08_model.py --stage dev` / `--stage test` | `cv_*.csv`, `dev_summary.json`, `test_results.csv` |
+| P5 Spark MLlib demo (development data only) | `src/09_mllib.py` | `mllib_demo.csv` |
+| P5 test descriptives (funnel, bank-level recall, paired bootstrap) | `src/11_test_descriptives.py` | `failure_funnel.csv`, `test_bank_level.csv`, `test_paired_bootstrap.csv` |
 
-1. Set up a compatible Python and Java environment.
-2. Install dependencies using `requirements.txt`.
-3. Download the required FDIC data.
-4. Execute the processing stages in sequence.
-5. Review the generated reports.
-6. Run the development modelling stage.
+`tools/check_submission.py` is a self-check of the repository (scripts referenced, pinned requirements, saved errors).
 
-Test evaluation is intentionally excluded from the standard development workflow.
+## Design decisions (details in the report)
+- Label `y = 1{failure in (q, q + 4 quarters]}`; mergers and other exits = 0; only `RESTYPE == "FAILURE"` counts (assistance transactions are not failures; `FAILURE_ONLY` switch in `config.py`). Modelling uses quarters up to 2025Q2.
+- Development 1984Q1–2006Q4, gap 2007Q1–2008Q4 (8 quarters), test 2009Q1–2014Q4. Tuning, feature choice and the threshold use development data only.
+- Year-to-date flow variables are de-cumulated; reports dated after the failure date are removed; features use only quarter q and earlier (truncation test in `pit_test.txt`).
+- Validation: expanding window, 4 folds, 5-quarter purge. Threshold from expected cost on out-of-fold development predictions; the false-alarm cost is an assumption (50 thousand USD per alarm) with a sensitivity table.
 
-See `run_all.sh` for the development pipeline. Review its commands before execution.
-
-## 10. Reports
-
-Important outputs are stored in `reports/`:
-
-| Report | Description |
-|---|---|
-| `dq_report.md` | Data quality assessment |
-| `dq_overview.png` | Data quality visualization |
-| `panel_summary.json` | Panel construction summary |
-| `failure_funnel.csv` | Failure-record reconciliation |
-| `label_sensitivity.csv` | Label sensitivity analysis |
-| `cv_scores.csv` | Cross-validation by fold |
-| `cv_pooled.csv` | Pooled cross-validation metrics |
-| `dev_summary.json` | Development summary |
-| `threshold_sensitivity.csv` | Threshold sensitivity |
-| `pit_test.txt` | Point-in-time validation |
-
-## 11. Data and Version Control
-
-Large raw datasets, processed Parquet files and model artifacts are not committed to the public repository.
-
-The repository retains source code and selected reports for transparency and reproducibility.
-
-## 12. References and AI Assistance Disclosure
-
-**Data source:** Federal Deposit Insurance Corporation (FDIC), BankFind Suite API.
-
-https://api.fdic.gov/banks
-
-AI tools assisted with code review, debugging and documentation. The author reviewed, executed and adapted the project code and is responsible for the final implementation and conclusions.
-
-The final disclosure should accurately identify the tools used and the nature of their assistance.
+## Sources and AI-tool disclosure
+- Data: FDIC BankFind Suite API, https://api.fdic.gov/banks (downloaded on **20-21/11/2026**).
+- `src/fdic_download_starter.py`: starter script provided by the course (used unchanged).
+- Libraries: pandas, NumPy, scikit-learn, Polars, PyArrow, PySpark, matplotlib, joblib, psutil, requests (versions in `requirements.txt`).
+- AI assistance: Claude (Anthropic) was used to draft and review code, to debug and to review results; I ran every step, checked the outputs and made the design decisions myself..

@@ -1,14 +1,16 @@
 step,count,explanation
-Records in the Failures table,4117,all RESTYPE values
-  of which RESTYPE = FAILURE,3039,counted as failures in this study
-  of which RESTYPE = ASSISTANCE,593,"assisted banks, not counted as failures"
-Distinct CERT with a FAILURE record,3036,one bank (CERT) can appear in more than one record
-  CERT with more than one FAILURE record,3,the earliest FAILDATE is used
-  FAILURE CERT with at least one Financials row,2841,usable for modelling
-  FAILURE CERT without any Financials row,195,no Call Report in 1984Q1-2026Q2
-    of which first FAILDATE before the first quarter of the panel,189,failed before the data start
-Banks with exit type 'failure' in the clean panel,2839,"FAILURE CERT with Financials rows, reports before FAILDATE"
-Banks with y = 1 in the development period,2290,label window reaches a failure
-Banks with y = 1 in the test period,469,label window reaches a failure
-Banks with y = 1 in either period,2837,"development and test, plus gap/other periods if labelled"
-FAILURE CERT in the panel that never get y = 1,4,e.g. fail after 2025Q2 or last report more than one year before FAILDATE
+Records in Failures table,4117,"all RESTYPE values, including missing CERT"
+  FAILURE records with valid CERT and FAILDATE,3039,eligible for bank-level failure linkage
+  ASSISTANCE records,593,not failures under the primary definition
+Distinct CERT with a FAILURE record,3036,earliest FAILDATE used per CERT
+  CERT with multiple FAILURE records,3,multiple event records retained
+FAILURE CERT with any raw Financials row,2841,before ASSET validity and failure-date filters
+FAILURE CERT without raw Financials row,195,no matching raw Call Report CERT
+FAILURE CERT with at least one clean-panel row,2839,after panel cleaning and point-in-time filters
+FAILURE CERT without clean-panel row,197,raw row may be invalid or all rows removed by event timing
+  No-panel first failure before first raw-panel quarter,189,failure predates available raw Financials history
+Clean-panel banks with EXIT_TYPE=failure,2839,bank-level diagnostic classification
+Banks with y=1 in development,2290,at least one positive prediction row
+Banks with y=1 in test,469,at least one positive prediction row
+Banks with y=1 anywhere in modelling features,2837,within configured modelling horizon
+Clean-panel FAILURE CERT never labelled y=1,2,e.g. event outside 12-month horizon or outside modelling period

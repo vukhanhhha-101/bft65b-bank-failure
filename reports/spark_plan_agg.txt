@@ -27,7 +27,7 @@ AdaptiveSparkPlan (20)
 (1) Scan parquet 
 Output [3]: [REPDTE#201, ASSET#203, ROA#228]
 Batched: true
-Location: InMemoryFileIndex [file:/content/drive/MyDrive/bft65b-bank-failure/bft65b-bank-failure/data_proc/panel_clean.parquet]
+Location: InMemoryFileIndex [file:/content/bft65b_local/data_proc/panel_clean.parquet]
 ReadSchema: struct<REPDTE:date,ASSET:double,ROA:double>
 
 (2) ColumnarToRow [codegen id : 1]

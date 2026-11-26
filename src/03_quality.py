@@ -72,29 +72,88 @@ def main():
     out += ["## 6. Distribution tails",
             md(pl.DataFrame(rows, schema=["field", "min", "p0.1", "p1", "p50", "p99", "p99.9", "max"], orient="row")), ""]
 
-    # 7. exits
-    last = df.group_by("CERT").agg(A("REPDTE").max().alias("LAST"))
+
+    A = pl.col
+
+    # 7. Exits: separate FAILURE from ASSISTANCE
+    last = df.group_by("CERT").agg(
+        A("REPDTE").max().alias("LAST")
+    )
     maxd = df["REPDTE"].max()
-    fl = fails.group_by("CERT").agg(A("FAILDATE").min(), A("RESTYPE").first())
-    ex = (last.join(fl, on="CERT", how="left")
-              .join(inst.select(["CERT", "ACTIVE", "CHANGEC1", "ENDEFYMD"]), on="CERT", how="left")
-              .with_columns(pl.when(A("FAILDATE").is_not_null()).then(pl.lit("failure"))
-                              .when(A("LAST") < maxd).then(pl.lit("other_exit"))
-                              .otherwise(pl.lit("active")).alias("exit_type")))
-    out += ["## 7. Exits (failure vs other)", md(ex.group_by("exit_type").len().sort("len")), "",
-            "Other exits by CHANGEC1 (map codes with the FDIC dictionary; mergers are NOT failures):",
-            md(ex.filter(A("exit_type") == "other_exit").group_by("CHANGEC1").len().sort("len", descending=True), 15), "",
-            "Failures table by RESTYPE:", md(fails.group_by("RESTYPE").len().sort("len", descending=True)), ""]
-    nopanel = fails.join(last, on="CERT", how="anti").height
-    after = fails.join(last, on="CERT").filter(A("LAST") >= A("FAILDATE")).height
-    gap = fails.join(last, on="CERT").select((A("FAILDATE") - A("LAST")).dt.total_days().alias("d"))["d"].drop_nulls()
-    out += [f"- failure records with no Financials rows: {nopanel}",
-            f"- failures whose last report is dated on/after FAILDATE (impossible for point-in-time): {after}",
-            f"- days between last report and FAILDATE: median {gap.median():.0f}, p10 {gap.quantile(0.1):.0f}, p90 {gap.quantile(0.9):.0f}\n"]
+
+    failure_rows = fails.filter(
+        (A("RESTYPE") == "FAILURE") &
+        A("CERT").is_not_null()
+    )
+    assistance_rows = fails.filter(
+        A("RESTYPE") == "ASSISTANCE"
+    )
+
+    failure_by_cert = failure_rows.group_by("CERT").agg(
+        A("FAILDATE").min().alias("FAILDATE"),
+        pl.len().alias("failure_records")
+    )
+
+    ex = (
+        last.join(failure_by_cert, on="CERT", how="left")
+        .join(
+            inst.select(["CERT", "ACTIVE", "CHANGEC1", "ENDEFYMD"]),
+            on="CERT",
+            how="left"
+        )
+        .with_columns(
+            pl.when(A("failure_records").is_not_null())
+            .then(pl.lit("failure"))
+            .when(A("LAST") < maxd)
+            .then(pl.lit("other_exit"))
+            .otherwise(pl.lit("active"))
+            .alias("exit_type")
+        )
+    )
+
+    out += [
+        "## 7. Exits (failure vs other)",
+        md(ex.group_by("exit_type").len().sort("len")),
+        "",
+        "Other exits by CHANGEC1 (map codes with the FDIC dictionary; mergers are NOT failures):",
+        md(ex.filter(A("exit_type") == "other_exit").group_by("CHANGEC1").len().sort("len", descending=True), 15),
+        "",
+        "Failures table by RESTYPE:",
+        md(fails.group_by("RESTYPE").len().sort("len", descending=True)),
+        "",
+        "## 8. Failures table audit (CERT linkage & repeated events)",
+        f"- total raw records in Failures table: {fails.height:,}",
+        f"- records missing CERT (kept in raw table, excluded from bank-level join): {fails.filter(A('CERT').is_null()).height:,} "
+        f"(FAILURE: {fails.filter(A('CERT').is_null() & (A('RESTYPE') == 'FAILURE')).height:,}, "
+        f"ASSISTANCE: {fails.filter(A('CERT').is_null() & (A('RESTYPE') == 'ASSISTANCE')).height:,})",
+        f"- valid FAILURE records with non-null CERT: {failure_rows.height:,}",
+        f"- distinct failed banks (unique CERT with >=1 FAILURE record): {failure_by_cert.height:,}",
+        f"- ASSISTANCE records in raw table: {assistance_rows.height:,} "
+        f"(with valid CERT: {assistance_rows.filter(A('CERT').is_not_null()).height:,} across {assistance_rows.filter(A('CERT').is_not_null())['CERT'].n_unique():,} distinct CERTs)",
+        "",
+    ]
+
+    nopanel = failure_by_cert.join(last, on="CERT", how="anti").height
+    inpanel = failure_by_cert.join(last, on="CERT")
+    after = inpanel.filter(A("LAST") >= A("FAILDATE")).height
+    gap = inpanel.select((A("FAILDATE") - A("LAST")).dt.total_days().alias("d"))["d"].drop_nulls()
+    out += [
+        f"- distinct FAILURE banks (valid CERT) with no Financials rows: {nopanel}",
+        f"- distinct FAILURE banks whose last report is dated on/after FAILDATE (impossible for point-in-time): {after}",
+        f"- days between last report and FAILDATE (distinct FAILURE banks in panel): median {gap.median():.0f}, p10 {gap.quantile(0.1):.0f}, p90 {gap.quantile(0.9):.0f}\n",
+    ]
 
     (REPORTS / "dq_report.md").write_text("\n".join(out), encoding="utf-8")
     fig, ax = plt.subplots(1, 2, figsize=(11, 3.5))
-    fy = fails.filter(A("FAILDATE").is_not_null()).group_by(A("FAILDATE").dt.year().alias("yr")).len().sort("yr")
+    fy = (
+        fails.filter(
+            (A("RESTYPE") == "FAILURE") &
+            A("FAILDATE").is_not_null()
+        )
+        .group_by(A("FAILDATE").dt.year().alias("yr"))
+        .len()
+        .sort("yr")
+    )
     ax[0].bar(fy["yr"], fy["len"]); ax[0].set_title("Failure records per year")
     ax[1].plot(per_q["REPDTE"], per_q["len"]); ax[1].set_title("Reporting banks per quarter")
     plt.tight_layout(); plt.savefig(REPORTS / "dq_overview.png", dpi=150)

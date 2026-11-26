@@ -82,26 +82,27 @@
 ## 7. Exits (failure vs other)
 | exit_type | len |
 |---|---|
-| failure | 3241 |
-| active | 4306 |
-| other_exit | 16517 |
+| failure | 2841 |
+| active | 4313 |
+| other_exit | 16910 |
 
 Other exits by CHANGEC1 (map codes with the FDIC dictionary; mergers are NOT failures):
 | CHANGEC1 | len |
 |---|---|
-| 223.0 | 14063 |
-| 221.0 | 805 |
-| 240.0 | 501 |
-| 217.0 | 458 |
+| 223.0 | 14181 |
+| 221.0 | 807 |
+| 240.0 | 504 |
+| 217.0 | 488 |
+| 213.0 | 242 |
 |  | 194 |
-| 224.0 | 183 |
+| 224.0 | 184 |
 | 222.0 | 173 |
 | 235.0 | 84 |
 | 216.0 | 23 |
-| 213.0 | 21 |
-| 230.0 | 10 |
-| 470.0 | 1 |
+| 211.0 | 17 |
+| 230.0 | 11 |
 | 225.0 | 1 |
+| 470.0 | 1 |
 
 Failures table by RESTYPE:
 | RESTYPE | len |
@@ -109,6 +110,13 @@ Failures table by RESTYPE:
 | FAILURE | 3524 |
 | ASSISTANCE | 593 |
 
-- failure records with no Financials rows: 834
-- failures whose last report is dated on/after FAILDATE (impossible for point-in-time): 478
-- days between last report and FAILDATE: median 47, p10 -163, p90 92
+## 8. Failures table audit (CERT linkage & repeated events)
+- total raw records in Failures table: 4,117
+- records missing CERT (kept in raw table, excluded from bank-level join): 488 (FAILURE: 485, ASSISTANCE: 3)
+- valid FAILURE records with non-null CERT: 3,039
+- distinct failed banks (unique CERT with >=1 FAILURE record): 3,036
+- ASSISTANCE records in raw table: 593 (with valid CERT: 590 across 586 distinct CERTs)
+
+- distinct FAILURE banks (valid CERT) with no Financials rows: 195
+- distinct FAILURE banks whose last report is dated on/after FAILDATE (impossible for point-in-time): 270
+- days between last report and FAILDATE (distinct FAILURE banks in panel): median 50, p10 2, p90 94

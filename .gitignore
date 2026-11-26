@@ -52,3 +52,11 @@ reports/archive_pre_lag_fix/
 
 # Local notebook backups
 BFT65B_pipeline_backup_*.ipynb
+*.bak.*
+_archive*/
+src/*(1).py
+reports_backup/
+spark-warehouse/
+metastore_db/
+derby.log
+*.pyc

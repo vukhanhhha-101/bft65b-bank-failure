@@ -2,6 +2,6 @@ SELECT [when([(col("qidx").shift([dyn int: 4]).over([col("CERT")])) == ([(col("q
    WITH_COLUMNS:
    [[([(col("REPDTE").dt.year()) * (4)]) + ([([(col("REPDTE").dt.month()) - (1)]) floor_div (3)].cast(Int32))].alias("qidx")] 
     SORT BY [col("CERT"), col("REPDTE")]
-      Parquet SCAN [/content/drive/MyDrive/bft65b-bank-failure/bft65b-bank-failure/data_proc/panel/year=1984/part.parquet, ... 42 other sources]
+      Parquet SCAN [/content/bft65b_local/data_proc/panel/year=1984/part.parquet, ... 42 other sources]
       PROJECT 4/33 COLUMNS
       ESTIMATED ROWS: 3085680
