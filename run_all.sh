@@ -47,7 +47,6 @@ echo "[5/6] Model development and diagnostics"
 python src/08_model.py --stage dev
 python src/08b_lag_sensitivity.py
 python src/09_mllib.py
-python src/10_dev_diagnostics.py --fast
 
 # 6. Test evaluation
 echo "[6/6] Test evaluation"
